@@ -15,40 +15,45 @@
 
 pipeline {
     agent any
-    
+
     environment {
-
+        // 환경 변수 추가
+        DOCKERHUB_CREDENTIALS = credentials('docker-user-pass')
     }
-    
+
     stages {
-        // 1. git hub 접속해서 특정 브런치의 코드를 가져온다.
-        stage('checkout'){
+        // 1. GitHub에서 특정 브랜치의 코드 가져오기
+        stage('checkout') {
             steps {
-                git branch: "main",
-                url: "https://github.com/SSOL-YANG/jenkins-test.git",
-                credentialsId:"git-access-key"
+                git branch: 'main',
+                url: 'https://github.com/SSOL-YANG/jenkins-test.git',
+                credentialsId: 'git-access-key'
             }
         }
-        // 2. 리액트 코드를 빌드 및 테스트 진행
-        stage{
-            sh "npm install"
-            sh "npm run build"
-        }
-        // 3. 도커 이미지 생성 (Dockerfile -> 도커 이미지화)
-        // 도커 계정 로그인 
-        // 4. 도커 허브에 이미지 푸쉬
-        stage('Dockerize'){
-            steps {// 도커 이미지 빌드  
-                sh "docer build -t mason9/test ."
-                //도커 로그인
-                sh " echo credentials('docker-user-pass') | docker login -u credentials('docker-user-pass') --password-stdin"
-                // 도커 이미지 푸쉬
-                sh "docker push mason9/test"
-                // 도커 이미지 삭제(젠킨스 서버내 불필요한 파일 삭제)
-                sh "docekr rmi mason9/test"
 
+        // 2. 리액트 코드 빌드 및 테스트 진행
+        stage('build') {
+            steps {
+                sh 'npm install'
+                sh 'npm run build'
             }
+        }
 
+        // 3. 도커 이미지 생성 및 Docker Hub에 푸시
+        stage('Dockerize') {
+            steps {
+                // 도커 이미지 빌드
+                sh 'docker build -t mason9/test .'
+
+                // 도커 허브에 로그인
+                sh "echo ${DOCKERHUB_CREDENTIALS_USR_PASS} | docker login --username ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
+
+                // 도커 이미지 푸시
+                sh 'docker push mason9/test'
+
+                // 도커 이미지 삭제 (불필요한 파일 삭제)
+                sh 'docker rmi mason9/test'
+            }
         }
     }
 }
