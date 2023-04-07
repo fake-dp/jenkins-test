@@ -15,7 +15,9 @@
 
 pipeline {
     agent any
-
+    tools {
+            nodejs "node14"
+        }
     environment {
         // 환경 변수 추가
         DOCKERHUB_CREDENTIALS = credentials('docker-user-pass')
@@ -24,6 +26,19 @@ pipeline {
 
     stages {
     
+     stage('Install dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+
+         stage('Dockerize') {
+            steps {
+                // Dockerize the app
+            }
+        }
+
+        
         // 1. GitHub에서 특정 브랜치의 코드 가져오기
         stage('checkout') {
             steps {
