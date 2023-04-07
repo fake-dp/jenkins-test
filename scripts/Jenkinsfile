@@ -23,6 +23,7 @@ pipeline {
 
 
     stages {
+    
         // 1. GitHub에서 특정 브랜치의 코드 가져오기
         stage('checkout') {
             steps {
@@ -34,6 +35,18 @@ pipeline {
 
         // 2. 리액트 코드 빌드 및 테스트 진행
         stage('build') {
+            stage('Install Node.js') {
+                steps {
+                    sh 'curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -'
+                    sh 'sudo apt-get install -y nodejs'
+                }
+            }
+
+                stage('Install Dependencies') {
+                steps {
+                    sh 'npm install'
+                }
+            }   
             steps {
                 sh 'npm install'
                 sh 'npm start'
