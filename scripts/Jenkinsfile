@@ -15,44 +15,28 @@
 
 pipeline {
     agent any
-    tools {
-            nodejs "node14"
-        }
+ 
     environment {
         // 환경 변수 추가
-        DOCKERHUB_CREDENTIALS = credentials('docker-user-pass')
+        DOCKERHUB_CREDENTIALS = credentials('docker-user')
     }
 
 
     stages {
-    
-     stage('Install dependencies') {
-            steps {
-                sh 'npm install'
-            }
-        }
-
-         stage('Dockerize') {
-            steps {
-                // Dockerize the app
-            }
-        }
-
-        
         // 1. GitHub에서 특정 브랜치의 코드 가져오기
         stage('checkout') {
             steps {
                 git branch: 'main',
                 url: 'https://github.com/SSOL-YANG/jenkins-test.git',
-                credentialsId: 'git-access-key'
+                credentialsId: 'github-user'
             }
         }
 
         // 2. 리액트 코드 빌드 및 테스트 진행
         stage('build') {
             steps {
-                sh 'npm install'
-                sh 'npm start'
+                sh 'npm ci'
+                sh "npm run build"
             }
         }
 
@@ -60,16 +44,16 @@ pipeline {
         stage('Dockerize') {
             steps {
                 // 도커 이미지 빌드
-                sh 'docker build -t mason9/test .'
+                sh 'docker build -t mason9/jenkins-test .'
 
                 // 도커 허브에 로그인
                 sh "echo ${DOCKERHUB_CREDENTIALS_USR_PASS} | docker login --username ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
 
                 // 도커 이미지 푸시
-                sh 'docker push mason9/test'
+                sh 'docker push mason9/jenkins-test'
 
                 // 도커 이미지 삭제 (불필요한 파일 삭제)
-                sh 'docker rmi mason9/test'
+                sh 'docker rmi mason9/jenkins-test'
             }
         }
     }
