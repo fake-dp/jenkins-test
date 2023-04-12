@@ -47,7 +47,7 @@ pipeline {
                 sh 'docker build -t mason9/jenkins-test .'
 
                 // 도커 허브에 로그인
-                sh "echo ${DOCKERHUB_CREDENTIALS_USR_PASS} | docker login --username ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
+                sh "echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin"
 
                 // 도커 이미지 푸시
                 sh 'docker push mason9/jenkins-test'
