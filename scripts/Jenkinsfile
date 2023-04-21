@@ -56,6 +56,30 @@ pipeline {
                 sh 'docker rmi mason9/jenkins-test'
             }
         }
+        // 4. AWS EC2에 SSH로 접속하여 도커 컨테이너 실행
+        stage('deploy') {
+            environment {
+                // SSH 를 통해 EC2에 접속하기 위한 환경 변수
+                SSH_HOST = 'ec2-52-79-183-224.ap-northeast-2.compute.amazonaws.com'
+                SSH_USER = 'mason'
+                SSH_PORT = '22'
+                DOCKER_CONTAINER_NAME = 'jenkins-test'
+                DOCKER_IMAGE_NAME = 'mason9/jenkins-test'
+            }
+            steps {
+                // SSH로 EC2에 접속하여 컨테이너 실행
+                sshagent(['SSH_KEY']) {
+                    sh "ssh -o StrictHostKeyChecking=no -p $SSH_PORT $SSH_USER@$SSH_HOST 'docker stop $DOCKER_CONTAINER_NAME || true && docker rm $DOCKER_CONTAINER_NAME || true && docker rmi $DOCKER_IMAGE_NAME || true && docker pull $DOCKER_IMAGE_NAME && docker run -d --name $DOCKER_CONTAINER_NAME -p 80:80 $DOCKER_IMAGE_NAME'"
+                }
+            }
+        }
 
+          // 5. Slack 메시지 보내기
+          stage('notification') {
+            steps {
+                // Slack 메시지 전송
+                slackSend channel: '#jenkins',
+                        message: 'Jenkins CD 파이프라인이 성공적으로 실행되었습니다.'
+            }
     }
 }
